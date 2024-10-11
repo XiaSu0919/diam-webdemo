@@ -1,8 +1,13 @@
 class Space {
-    constructor(name, image, objUrl, jsonContent) {
+    constructor(name, imageUrl,localImgUrl, plyUrl, jsonContent) {
         this.name = name;
-        this.image = image;
-        this.objUrl = objUrl;
+        this.imageUrl = imageUrl;
+        this.plyUrl = plyUrl;
+        this.localImgUrl=localImgUrl;
         this.jsonContent = jsonContent;
+        this.downloaded = false;
+        this.downloading = false;
+        this.modelLocalURL = "";
     }
 }
+export default Space
