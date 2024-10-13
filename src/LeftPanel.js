@@ -25,29 +25,31 @@ function LeftPanel(props) {
     return (
       <div style={styles.panel}>
       <h2>Spaces</h2>
-      {props.spaces && props.spaces.length > 0 ? (
+      <div style={{ overflowY: 'auto', height: 'calc(100vh - 60px)' }}>
+        {props.spaces && props.spaces.length > 0 ? (
         props.spaces.map((space, index) => (
-        <div key={index} onClick={() => handleImageClick(space)} style={{ position: 'relative' }}>
-          <h4>{space.name}</h4>
+          <div key={index} onClick={() => handleImageClick(space)} style={{ position: 'relative', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+            <div style={{ flex: '1 1 auto', marginRight: '10px', wordBreak: 'break-word' }}>
+            <h4 style={{ margin: '0' }}>{space.name}</h4>
+            </div>
+            <div style={{ flex: '0 0 auto', width: '20px', height: '20px' }}>
+            {props.downloadingState[index] ? (
+              <img src={loadingIcon} alt="Loading" style={{ width: '100%', height: '100%' }} />
+            ) : props.downloadedState[index] ? (
+              <img src={readyIcon} alt="Downloaded" style={{ width: '100%', height: '100%' }} />
+            ) : (
+              <img src={downloadIcon} alt="Download" style={{ width: '100%', height: '100%' }} />
+            )}
+            </div>
+          </div>
           <img src={space.imageUrl} alt={space.name} style={{ width: '100%' }} />
-          {props.downloadingState[index] ? (
-          <div style={{ ...styles.iconContainer, width: '20%', height: '20%' }}>
-            <img src={loadingIcon} alt="Loading" style={{ width: '100%', height: '100%' }} />
           </div>
-          ) : props.downloadedState[index] ? (
-          <div style={{ ...styles.iconContainer, width: '20%', height: '20%' }}>
-            <img src={readyIcon} alt="Downloaded" style={{ width: '100%', height: '100%' }} />
-          </div>
-          ) : (
-          <div style={{ ...styles.iconContainer, width: '20%', height: '20%' }}>
-            <img src={downloadIcon} alt="Download" style={{ width: '100%', height: '100%' }} />
-          </div>
-          )}
-        </div>
         ))
-      ) : (
+        ) : (
         <p>No spaces available</p>
-      )}
+        )}
+      </div>
       </div>
     );
   
