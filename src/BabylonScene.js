@@ -29,8 +29,8 @@ const BabylonScene =forwardRef((props, ref) => {
     };
     const classMapping = {
       "1": "door",
-      "2": "stair",
-      "3": "elevator",
+      "2": "elevator",
+      "3": "stair",
       "4": "ramp"
     };
     const createBoxFromCorners = (name, type, lowerCorners, upperCorners, scene) => {
@@ -103,20 +103,25 @@ const BabylonScene =forwardRef((props, ref) => {
         depth: depth,
         updatable: true
       }, scene2);
-    
+      let material2 = scene2.getMaterialByName(type);
+      if (!material2) {
+        material2 = new BABYLON.StandardMaterial(type, scene2);
+        material2.diffuseColor = colors[type];
+        material2.alpha = 0; // Set transparency level (0 is fully transparent, 1 is fully opaque)
+      }
       // Position the box at the center
       box2.position = new BABYLON.Vector3(centerX, centerY, centerZ);
     
       // Apply the rotation quaternion to the box
       box2.rotationQuaternion = rotationQuaternion;
-      box2.material = material;
+      box2.material = material2;
       // Enable edges rendering
       box2.enableEdgesRendering();
       box2.edgesWidth = 8.0;
       box2.edgesColor = new BABYLON.Color4(
-        material.diffuseColor.r,
-        material.diffuseColor.g,
-        material.diffuseColor.b,
+        material2.diffuseColor.r,
+        material2.diffuseColor.g,
+        material2.diffuseColor.b,
         1
       );
     
@@ -195,31 +200,46 @@ const BabylonScene =forwardRef((props, ref) => {
         });
         //scene.clearColor = new BABYLON.Color4(0, 0, 0, 0); // Optional: Reset background color
       }
-      BABYLON.SceneLoader.ImportMeshAsync("", modelUrl, "", scene, null, ".ply")
+      BABYLON.SceneLoader.ImportMeshAsync("", modelUrl, "", scene, null, ".ply").then((result) => {
+        result.meshes.forEach((mesh) => {
+          
+            // Create a new Standard Material for the mesh
+            const material = new BABYLON.StandardMaterial("vertexMaterial", scene);
+            
+            // Enable vertex colors (so it uses the colors embedded in the .ply file)
+            material.vertexColor = true;
+            
+            // Set emissive color to the mesh's original colors (ignores lighting)
+            material.emissiveColor = new BABYLON.Color3(1, 1, 1); // White, to reflect original color
+            
+            // Disable the influence of lighting
+            material.disableLighting = true;
+    
+            // Assign the material to the mesh
+            mesh.material = material;
+        
+        });
+    });
       BABYLON.SceneLoader.ImportMeshAsync("", modelUrl, "", scene2, null, ".ply")
-      
   .then((result) => {
-    //scene.clearColor = new BABYLON.Color4(0.5, 0.5, 0.5, 1); // Default blue color
-
     // Make the loaded model less reflective using PBR material
     result.meshes.forEach((mesh) => {
-      if (mesh.material) {
-        // Create a new PBR material
-        const pbrMaterial = new BABYLON.PBRMaterial("pbrMaterial", scene);
+      
+        // Create a new Standard Material for the mesh
+        const material = new BABYLON.StandardMaterial("vertexMaterial", scene2);
+        
+        // Enable vertex colors (so it uses the colors embedded in the .ply file)
+        material.vertexColor = true;
+        
+        // Set emissive color to the mesh's original colors (ignores lighting)
+        material.emissiveColor = new BABYLON.Color3(1, 1, 1); // White, to reflect original color
+        
+        // Disable the influence of lighting
+        material.disableLighting = true;
 
-        // Enable vertex colors (if your .ply model has them)
-        pbrMaterial.useVertexColors = true;
-
-        // Set the metallic and roughness values to make the material less reflective
-        pbrMaterial.metallic = 0; // No metallic reflections
-        pbrMaterial.roughness = 1; // Full roughness to give a matte look
-
-        // Optionally, remove reflectivity
-        pbrMaterial.reflectivityColor = new BABYLON.Color3(0, 0, 0);
-
-        // Assign the PBR material to the mesh
-        mesh.material = pbrMaterial;
-      }
+        // Assign the material to the mesh
+        mesh.material = material;
+    
     });
     const boundingInfo = result.meshes[0].getBoundingInfo();
         const boundingBox = boundingInfo.boundingBox;
@@ -233,10 +253,10 @@ const BabylonScene =forwardRef((props, ref) => {
         const orthoHeight = extendSize.y * 2;
         const orthoWidth = orthoHeight * aspectRatio;
 
-        secondaryCamera.orthoLeft = -orthoWidth ;
-        secondaryCamera.orthoRight = orthoWidth;
-        secondaryCamera.orthoTop = orthoHeight ;
-        secondaryCamera.orthoBottom = -orthoHeight ;
+        secondaryCamera.orthoLeft = -orthoWidth*2 ;
+        secondaryCamera.orthoRight = orthoWidth*2;
+        secondaryCamera.orthoTop = orthoHeight*2 ;
+        secondaryCamera.orthoBottom = -orthoHeight*2 ;
   })
   .catch((error) => {
     console.error("Error loading model:", error);
@@ -246,6 +266,7 @@ const BabylonScene =forwardRef((props, ref) => {
     useEffect(() => {
       const canvas = canvasRef.current;
       const secondaryCanvas = secondaryCanvasRef.current;
+      //secondaryCanvas.style.backgroundColor = "white";
       // Initialize Babylon.js engine
       const engine = new BABYLON.Engine(canvas, true);
       const engine2 = new BABYLON.Engine(secondaryCanvas, true);
@@ -280,6 +301,7 @@ const BabylonScene =forwardRef((props, ref) => {
 
       const createScene2 = () => {
         const scene2  = new BABYLON.Scene(engine2);
+        scene2.clearColor = new BABYLON.Color4(0, 0, 0, 0);
         //Create OrthographicCamera for the secondary canvas
         const secondaryCamera = new BABYLON.FreeCamera("secondaryCamera", new BABYLON.Vector3(0, 0, -10), scene2);
         secondaryCamera.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
@@ -290,6 +312,25 @@ const BabylonScene =forwardRef((props, ref) => {
         secondaryCamera.setTarget(BABYLON.Vector3.Zero());
         
         //secondaryCamera.attachControl(secondaryCanvas, true);
+
+        // Override the default behavior to restrict to zoom only
+        secondaryCanvas.addEventListener("wheel", (event) => {
+          event.preventDefault();
+          const delta = event.deltaY;
+          const zoomFactor = 0.1; // Adjust this factor to control zoom speed
+
+          if (delta > 0) {
+            secondaryCamera.orthoLeft *= (1 + zoomFactor);
+            secondaryCamera.orthoRight *= (1 + zoomFactor);
+            secondaryCamera.orthoTop *= (1 + zoomFactor);
+            secondaryCamera.orthoBottom *= (1 + zoomFactor);
+          } else {
+            secondaryCamera.orthoLeft *= (1 - zoomFactor);
+            secondaryCamera.orthoRight *= (1 - zoomFactor);
+            secondaryCamera.orthoTop *= (1 - zoomFactor);
+            secondaryCamera.orthoBottom *= (1 - zoomFactor);
+          }
+        });
         //scene.createDefaultEnvironment();
         //engine.registerView(canvas,camera);
         //engine.registerView(secondaryCanvas, secondaryCamera);
