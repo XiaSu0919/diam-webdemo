@@ -392,7 +392,7 @@ const BabylonScene =forwardRef((props, ref) => {
     }}
   >
     <h3>Detected Facilities</h3>
-    <p>Here we list the detected a11y related facilities in the space.</p>
+    <p>Here we list the annotated facilities in the space.</p>
     <div
       style={{
         flexGrow: 1,
@@ -404,7 +404,18 @@ const BabylonScene =forwardRef((props, ref) => {
         <div
           key={index}
           onMouseEnter={() => highlightBox(bbox)}
-          style={{ marginBottom: "10px" }}
+          onMouseLeave={() => {/* Handle mouse leave if needed */}}
+          style={{ 
+            marginBottom: "10px",
+            padding: "5px",
+            transition: "background-color 0.3s ease",
+            backgroundColor: "transparent",
+            cursor: "pointer",
+            ":hover": {
+              backgroundColor: "#f0f0f0"
+            }
+          }}
+          className="facility-item"
         >
           <div
             style={{

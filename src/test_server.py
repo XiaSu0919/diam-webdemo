@@ -1,5 +1,4 @@
 import requests
-
 def visit_url(url):
     try:
         response = requests.get(url)
