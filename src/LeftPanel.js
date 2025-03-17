@@ -8,6 +8,7 @@ function LeftPanel(props) {
     const handleImageClick = (space) => {
       // Logic to load the file in the Babylon canvas
       console.log(`Clicking: ${space.name}`);
+      //props.onSelectModel(space)
       if (space.downloaded){
         props.onSelectModel(space)
       }

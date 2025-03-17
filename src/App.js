@@ -9,8 +9,8 @@ function App() {
   const [downloaded,setDownloaded] = useState([]);
   const BabylonRef = useRef(); // Ref to access the Canvas component
   const [selectedSpace, setSelectedSpace] = useState();
-//const server_url="https://settled-stirring-fawn.ngrok-free.app/"
-const server_url="http://localhost/"//
+const server_url="https://settled-stirring-fawn.ngrok-free.app/"
+//const server_url="http://localhost/"//
 
     useEffect(() => {
       const fetchSpaceInfo = async () => {
@@ -32,8 +32,9 @@ const server_url="http://localhost/"//
             name: item.name,
             imageUrl: server_url + '/images/' + item.name + '/' + item.image,
             localImageUrl:"",
-            plyPath: server_url + '/files/' + item.name + '/' + "colored_model.ply",
-            jsonContent: item.json
+            //plyPath: server_url + '/files/' + item.name + '/' + item.ply_file,
+            plyPath: "http://localhost/files/"+ item.ply_file,
+            jsonContent: item.json_files
           }));
           
           // Create a temporary array to store spaces
@@ -94,17 +95,21 @@ const server_url="http://localhost/"//
         );
         setDownloading(updatedDownloading);
         try {
+          console.log("Downloading model from URL:", space.plyUrl);
+          // Use the space's actual plyPath from the server instead of hardcoded URL
           const response = await fetch(space.plyUrl, {
             method: 'GET',
-            headers: {
-              'ngrok-skip-browser-warning': 'true'
-            }
+            // headers: {
+            //   'ngrok-skip-browser-warning': 'true'
+            // }
           });
+          
           if (!response.ok) {
-            throw new Error('Network response was not ok');
+            throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
           }
+          
           const blob = await response.blob();
-          console.log("Model blob size",blob.size)
+          console.log("Model blob size", blob.size);
           const localURL = URL.createObjectURL(blob);
           space.modelLocalURL = localURL;
           space.downloaded = true;
@@ -114,6 +119,7 @@ const server_url="http://localhost/"//
           setDownloaded(updatedDownloaded);
         } catch (error) {
           console.error('Error downloading model:', error);
+          console.log('Attempted to fetch from URL:', space.plyPath);
         } finally {
           space.downloading = false;
           const updatedDownloading = downloading.map((status, index) => 
