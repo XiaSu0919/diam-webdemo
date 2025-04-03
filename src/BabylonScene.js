@@ -197,6 +197,10 @@ const BabylonScene = forwardRef((props, ref) => {
         1
       );
 
+      // Initially hide the boxes - only show when highlighted or selected
+      box.visibility = 0;
+      box2.visibility = 0;
+
       // Create and return a BBox object instead of just the Babylon box
       return new BBox(name, type, invertedLowerCorners, invertedUpperCorners, box, box2, [], [], description);
     };
@@ -210,19 +214,23 @@ const BabylonScene = forwardRef((props, ref) => {
         setBboxes([]);
     
         Object.keys(json).forEach(className => {
-          console.log(`Filename: ${className}`);
-          const bbox_json=json[className]["bounding_boxes"][0]
-          const corners = bbox_json["obb_corners"]; // Access objects within each class
-          const lower_corners = corners.slice(0,4);
-          const upper_corners = corners.slice(4,8);
-          const object_id=json[className]["object_id"];
-          const type=object_id.split("_")[0];
-          const description=json[className]["description"];
-          const bbox = createBoxFromCorners(object_id, type, corners, scene, description);
+          try {
+            console.log(`Filename: ${className}`);
+            const bbox_json = json[className]["bounding_boxes"][0];
+            const corners = bbox_json["obb_corners"]; // Access objects within each class
+            const lower_corners = corners.slice(0, 4);
+            const upper_corners = corners.slice(4, 8);
+            const object_id = json[className]["object_id"];
+            const type = object_id.split("_")[0];
+            const description = json[className]["description"];
+            const bbox = createBoxFromCorners(object_id, type, corners, scene, description);
             console.log(`Added object in class: ${className}, Object: ${className}`);
-        
+            
             // Add the BBox object to the state
             setBboxes(prevBboxes => [...prevBboxes, bbox]);
+          } catch (error) {
+            console.error(`Error processing object in class: ${className}`, error);
+          }
         
           
         });
@@ -232,32 +240,34 @@ const BabylonScene = forwardRef((props, ref) => {
     
     const highlightBox = (box) => {
       if (scene) {
-        // Remove hover highlight from all boxes
+        // Hide all boxes that are not selected
         bboxes.forEach(bbox => {
-          if (bbox !== selectedBox) {
-            bbox.box.edgesWidth = 8.0;
-            bbox.box2.edgesWidth = 8.0;
+          if (bbox !== selectedBox && bbox !== box) {
+            bbox.box.visibility = 0;
+            bbox.box2.visibility = 0;
             
-            // Make axes less visible for non-highlighted boxes
+            // Hide axes for non-highlighted boxes
             if (bbox.axisMeshes) {
               bbox.axisMeshes.forEach(axis => {
-                axis.visibility = 0.3;
+                axis.visibility = 0;
               });
             }
             if (bbox.axisMeshes2) {
               bbox.axisMeshes2.forEach(axis => {
-                axis.visibility = 0.3;
+                axis.visibility = 0;
               });
             }
           }
         });
 
-        // Highlight the hovered box
+        // Show and highlight the hovered box
         if (box !== selectedBox) {
-          box.box.edgesWidth = 20.0;
-          box.box2.edgesWidth = 20.0;
+          box.box.visibility = 1;
+          box.box2.visibility = 1;
+          box.box.edgesWidth = 10.0;
+          box.box2.edgesWidth = 10.0;
           
-          // Make axes more visible for hovered box
+          // Make axes visible for hovered box
           if (box.axisMeshes) {
             box.axisMeshes.forEach(axis => {
               axis.visibility = 0.7;
@@ -285,27 +295,31 @@ const BabylonScene = forwardRef((props, ref) => {
     
     const selectBox = (box) => {
       if (scene) {
-        // Reset all boxes to default state
+        // Hide all boxes
         bboxes.forEach(bbox => {
-          bbox.box.edgesWidth = 8.0;
-          bbox.box2.edgesWidth = 8.0;
-          
-          if (bbox.axisMeshes) {
-            bbox.axisMeshes.forEach(axis => {
-              axis.visibility = 0.3;
-            });
-          }
-          if (bbox.axisMeshes2) {
-            bbox.axisMeshes2.forEach(axis => {
-              axis.visibility = 0.3;
-            });
+          if (bbox !== box) {
+            bbox.box.visibility = 0;
+            bbox.box2.visibility = 0;
+            
+            if (bbox.axisMeshes) {
+              bbox.axisMeshes.forEach(axis => {
+                axis.visibility = 0;
+              });
+            }
+            if (bbox.axisMeshes2) {
+              bbox.axisMeshes2.forEach(axis => {
+                axis.visibility = 0;
+              });
+            }
           }
         });
         
-        // Apply strong highlight to selected box
+        // Show and apply strong highlight to selected box
         if (box) {
-          box.box.edgesWidth = 38.0;
-          box.box2.edgesWidth = 38.0;
+          box.box.visibility = 1;
+          box.box2.visibility = 1;
+          box.box.edgesWidth = 15.0;
+          box.box2.edgesWidth = 15.0;
           
           // Make axes fully visible for selected box
           if (box.axisMeshes) {
@@ -371,26 +385,26 @@ const BabylonScene = forwardRef((props, ref) => {
     const handleCanvasClick = (event) => {
       if (scene) {
         // Perform ray casting to detect if a box was clicked
-        const pickResult = scene.pick(scene.pointerX, scene.pointerY);
+        // const pickResult = scene.pick(scene.pointerX, scene.pointerY);
         
-        if (pickResult.hit && pickResult.pickedMesh) {
-          // Find which bbox was clicked
-          const clickedBox = bboxes.find(bbox => bbox.box === pickResult.pickedMesh);
-          if (clickedBox) {
-            // Check if it's a double click
-            if (event.detail === 2) {
-              // Double click - focus camera on the box
-              focusCameraOnBox(clickedBox);
-            } else {
-              // Single click - select the box
-              selectBox(clickedBox);
-            }
-            return;
-          }
-        }
+        // if (pickResult.hit && pickResult.pickedMesh) {
+        //   // Find which bbox was clicked
+        //   const clickedBox = bboxes.find(bbox => bbox.box === pickResult.pickedMesh);
+        //   if (clickedBox) {
+        //     // Check if it's a double click
+        //     if (event.detail === 2) {
+        //       // Double click - focus camera on the box
+        //       focusCameraOnBox(clickedBox);
+        //     } else {
+        //       // Single click - select the box
+        //       selectBox(clickedBox);
+        //     }
+        //     return;
+        //   }
+        // }
         
         // If no box was clicked, deselect
-        selectBox(null);
+        //selectBox(null);
       }
     };
     
@@ -732,19 +746,7 @@ const BabylonScene = forwardRef((props, ref) => {
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div style={{ display: "flex", alignItems: "center" }}>
-              <div
-                style={{
-                  width: "24px",
-                  height: "24px",
-                  backgroundColor: typeColors[bbox.type] ? 
-                    `rgb(${Math.round(typeColors[bbox.type].r * 255)}, ${Math.round(typeColors[bbox.type].g * 255)}, ${Math.round(typeColors[bbox.type].b * 255)})` : 
-                    "#cccccc",
-                  display: "inline-block",
-                  marginRight: "12px",
-                  borderRadius: "4px",
-                  boxShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
-                }}
-              ></div>
+              
               <strong style={{ fontSize: "14px" }}>{typeNames[bbox.type] || bbox.type}</strong>
             </div>
             <button 
@@ -776,6 +778,64 @@ const BabylonScene = forwardRef((props, ref) => {
           </div>
         </div>
       ))}
+    </div>
+    <div style={{ display: "flex", justifyContent: "center", marginBottom: "10px" }}>
+      <button 
+        className="btn btn-primary"
+        style={{
+          padding: "8px 16px",
+          fontSize: "14px",
+          borderRadius: "4px",
+          backgroundColor: "#1890ff",
+          color: "white",
+          border: "none",
+          cursor: "pointer",
+          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+          transition: "all 0.3s ease"
+        }}
+        onClick={() => {
+          if (camera) {
+            // Reset to bird's eye view
+            camera.position = new BABYLON.Vector3(0, 20, 0);
+            camera.setTarget(new BABYLON.Vector3(0, 0, 0));
+          }
+          // Reset the secondary camera as well
+          if (secondaryCamera) {
+            const boundingInfo = scene2.meshes[0]?.getBoundingInfo();
+            if (boundingInfo) {
+              const boundingBox = boundingInfo.boundingBox;
+              const center = boundingBox.centerWorld;
+              const extendSize = boundingBox.extendSizeWorld;
+              
+              secondaryCamera.position = new BABYLON.Vector3(center.x, center.y + extendSize.y * 2, center.z);
+              secondaryCamera.setTarget(center);
+            }
+          }
+          
+          // Deselect the currently selected box
+          setSelectedBox(null);
+          
+          // Hide all boxes
+          bboxes.forEach(bbox => {
+            bbox.box.visibility = 0;
+            bbox.box2.visibility = 0;
+            
+            // Hide axes
+            if (bbox.axisMeshes) {
+              bbox.axisMeshes.forEach(axis => {
+                axis.visibility = 0;
+              });
+            }
+            if (bbox.axisMeshes2) {
+              bbox.axisMeshes2.forEach(axis => {
+                axis.visibility = 0;
+              });
+            }
+          });
+        }}
+      >
+        Return to Bird's Eye View
+      </button>
     </div>
 
     <canvas
