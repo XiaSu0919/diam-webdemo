@@ -1,70 +1,229 @@
-# Getting Started with Create React App
+# DIAM Web Demo
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A 3D Indoor Asset Management (DIAM) web application for visualizing and exploring indoor spaces with AI-detected object annotations.
 
-## Available Scripts
+## Overview
 
-In the project directory, you can run:
+This React-based application provides an interactive 3D visualization platform for indoor environments, featuring:
 
-### `npm start`
+- **Dual-View Interface**: Primary 3D perspective view and secondary orthographic floor plan view
+- **AI Object Detection**: Visualize detected objects with colored bounding boxes and descriptions
+- **Interactive Navigation**: Click, hover, and keyboard-controlled camera movement
+- **Space Management**: Browse, download, and select different indoor spaces
+- **Real-time Asset Exploration**: Explore facilities and objects within each space
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Features
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### 🏢 Space Management
+- Browse available indoor spaces with preview images
+- Download 3D models (.ply files) on-demand
+- Visual download progress indicators
+- Automatic model loading and object detection overlay
 
-### `npm test`
+### 🎮 3D Visualization
+- **Main View**: Full 3D perspective with mouse/keyboard controls
+- **Floor Plan View**: Top-down orthographic view for spatial understanding
+- **Dual-camera synchronization** for coordinated navigation
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### 🔍 Object Detection & Interaction
+- Color-coded bounding boxes for different object types
+- Interactive object selection and highlighting
+- Facility panel with object descriptions
+- Camera focus on selected objects
+- Hover effects and visual feedback
 
-### `npm run build`
+### 🎨 Visual Features
+- Transparent bounding boxes with colored edges
+- Consistent color coding by object type
+- Smooth camera animations and transitions
+- Responsive design with fixed left panel
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Quick Start
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Prerequisites
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- Node.js (v14 or higher)
+- npm or yarn package manager
 
-### `npm run eject`
+### Installation
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd diam-webdemo
+   ```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+3. **Start the development server**
+   ```bash
+   npm start
+   ```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+4. **Open your browser**
+   Navigate to [http://localhost:3000](http://localhost:3000)
 
-## Learn More
+### Available Scripts
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+- `npm start` - Runs the app in development mode
+- `npm test` - Launches the test runner
+- `npm run build` - Builds the app for production
+- `npm run eject` - Ejects from Create React App (one-way operation)
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Usage Guide
 
-### Code Splitting
+### Getting Started
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+1. **Browse Spaces**: Available spaces appear in the left panel with preview images
+2. **Download Models**: Click on a space to download its 3D model (indicated by download icon)
+3. **Explore Space**: Once downloaded (green checkmark), click to load the space
+4. **Navigate**: Use mouse to rotate/zoom, arrow keys to move camera
 
-### Analyzing the Bundle Size
+### Navigation Controls
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+#### Main 3D View
+- **Mouse**: Drag to rotate, scroll to zoom
+- **Arrow Keys**: 
+  - ↑ Move forward
+  - ↓ Move backward  
+  - ← Move left
+  - → Move right
 
-### Making a Progressive Web App
+#### Floor Plan View
+- **Mouse Wheel**: Zoom in/out
+- **Double-click**: Center camera on clicked location
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### Object Interaction
 
-### Advanced Configuration
+- **Hover**: Objects highlight with thicker edges and appear in facility panel
+- **Click**: Select objects for persistent highlighting
+- **View Button**: Focus camera on selected object
+- **Return to Bird's Eye**: Reset to overview perspective
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## Architecture
 
-### Deployment
+### Component Structure
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+```
+src/
+├── App.js              # Main application component
+├── BabylonScene.js     # 3D visualization engine
+├── LeftPanel.js        # Space selection and browsing
+├── Space.js            # Data model for spaces
+└── Icons/              # UI icons (loading, ready, download)
+```
 
-### `npm run build` fails to minify
+### Key Technologies
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- **React 18**: Modern React with hooks and functional components
+- **Babylon.js 7**: Advanced 3D rendering engine
+- **Tailwind CSS + DaisyUI**: Utility-first styling framework
+- **Modern JavaScript**: ES6+ features and async/await patterns
+
+### Data Flow
+
+1. **Space Loading**: Fetch space metadata from server
+2. **Image Processing**: Download and create local blob URLs for previews
+3. **Model Download**: On-demand .ply file download with progress tracking
+4. **Object Processing**: Parse JSON object detection data into 3D bounding boxes
+5. **Rendering**: Dual-scene rendering with synchronized cameras
+
+## Configuration
+
+### Server Configuration
+
+Update the server URL in `src/App.js`:
+
+```javascript
+const SERVER_URL = "https://your-server-url.com/";
+// const SERVER_URL = "http://localhost/"; // For local development
+```
+
+### Styling Customization
+
+The application uses a combination of:
+- **Inline styles** for dynamic and component-specific styling
+- **Tailwind classes** for utility-based styling
+- **CSS-in-JS** for hover effects and animations
+
+## API Integration
+
+The application expects the following server endpoints:
+
+### GET /spaces
+Returns an array of available spaces:
+```json
+[
+  {
+    "name": "Office Floor 1",
+    "image": "preview.jpg",
+    "ply_file": "model.ply",
+    "json_files": { /* object detection data */ }
+  }
+]
+```
+
+### Static File Serving
+- Images: `/images/{space_name}/{image_file}`
+- Models: `/files/{ply_file}`
+
+## Development
+
+### Adding New Features
+
+1. **New Object Types**: Update color palette in `BabylonScene.js`
+2. **Additional Views**: Extend camera system in scene creation
+3. **Enhanced Interactions**: Add event handlers in interaction functions
+4. **UI Improvements**: Modify styles in component files
+
+### Performance Considerations
+
+- Models are loaded on-demand to reduce initial load time
+- Bounding boxes are hidden by default and shown only on interaction
+- Image blobs are created locally for faster preview loading
+- Efficient React state management prevents unnecessary re-renders
+
+### Debugging
+
+Enable console logging by checking browser developer tools. Key log messages include:
+- Space loading progress
+- Model download status
+- Object detection processing
+- Camera movement events
+
+## Browser Support
+
+- **Chrome/Edge**: Full support (recommended)
+- **Firefox**: Full support
+- **Safari**: Full support with potential WebGL performance differences
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/new-feature`)
+3. Commit changes (`git commit -m 'Add new feature'`)
+4. Push to branch (`git push origin feature/new-feature`)
+5. Create a Pull Request
+
+## License
+
+This project is part of the DIAM (3D Indoor Asset Management) research initiative.
+
+## Troubleshooting
+
+### Common Issues
+
+**Models not loading**: Check server URL and CORS configuration
+**Performance issues**: Reduce model complexity or limit concurrent objects
+**Camera controls not working**: Ensure canvas has focus and no conflicting event handlers
+
+### Support
+
+For technical issues or questions about the DIAM platform, please check the project documentation or create an issue in the repository.
+
+---
+
+*Built with React and Babylon.js for advanced 3D indoor space visualization and management.*

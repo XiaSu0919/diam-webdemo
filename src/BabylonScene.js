@@ -2,208 +2,255 @@ import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef } f
 import * as BABYLON from "babylonjs";
 import "babylonjs-loaders";
 import "@babylonjs/loaders/OBJ/objFileLoader";
+
+/**
+ * BabylonScene Component - Renders 3D scene with dual-view setup
+ * Main features:
+ * - Primary 3D perspective view for model exploration
+ * - Secondary orthographic top-down view for floor plan navigation
+ * - Interactive bounding box visualization for detected objects
+ * - Facility panel with object selection and description
+ */
 const BabylonScene = forwardRef((props, ref) => {
-    const canvasRef = useRef(null);
-    const secondaryCanvasRef = useRef(null);
-    const [scene, setScene] = useState(null);
-    const [scene2, setScene2] = useState(null);
-    const [camera, setCamera] = useState(null);
-    const [secondaryCamera, setSecondaryCamera] = useState(null);
-    const [bboxes, setBboxes] = useState([]);
-    const [typeColors, setTypeColors] = useState({});
-    const [typeNames, setTypeNames] = useState({});
-    const [hoveredBox, setHoveredBox] = useState(null);
-    const [selectedBox, setSelectedBox] = useState(null);
-    const facilityItemsRef = useRef({});
-    const facilityListRef = useRef(null);
+  // Canvas references
+  const canvasRef = useRef(null);
+  const secondaryCanvasRef = useRef(null);
+  
+  // Scene and camera state
+  const [scene, setScene] = useState(null);
+  const [scene2, setScene2] = useState(null);
+  const [camera, setCamera] = useState(null);
+  const [secondaryCamera, setSecondaryCamera] = useState(null);
+  
+  // Bounding box and interaction state
+  const [bboxes, setBboxes] = useState([]);
+  const [typeColors, setTypeColors] = useState({});
+  const [typeNames, setTypeNames] = useState({});
+  const [hoveredBox, setHoveredBox] = useState(null);
+  const [selectedBox, setSelectedBox] = useState(null);
+  
+  // UI references
+  const facilityItemsRef = useRef({});
+  const facilityListRef = useRef(null);
     
-    class BBox {
-      constructor(name, type, lowerCorners, upperCorners, box, box2, axisMeshes, axisMeshes2, description) {
-        this.name = name;
-        this.type = type;
-        this.lowerCorners = lowerCorners;
-        this.upperCorners = upperCorners;
-        this.box = box;
-        this.box2 = box2;
-        this.axisMeshes = axisMeshes || [];
-        this.axisMeshes2 = axisMeshes2 || [];
-        this.description = description || "";
-      }
+  /**
+   * BBox Class - Represents a bounding box for detected objects
+   * Contains geometry data and 3D mesh references for both scenes
+   */
+  class BBox {
+    constructor(name, type, lowerCorners, upperCorners, box, box2, axisMeshes, axisMeshes2, description) {
+      this.name = name;
+      this.type = type;
+      this.lowerCorners = lowerCorners;
+      this.upperCorners = upperCorners;
+      this.box = box;                    // Main scene mesh
+      this.box2 = box2;                  // Secondary scene mesh
+      this.axisMeshes = axisMeshes || [];
+      this.axisMeshes2 = axisMeshes2 || [];
+      this.description = description || "";
+    }
+  }
+    
+  /**
+   * Color palette management for object types
+   * Uses predefined palette first, then generates random colors
+   */
+  const COLOR_PALETTE = [
+    new BABYLON.Color3(0.95, 0.33, 0.33), // Red
+    new BABYLON.Color3(0.33, 0.76, 0.33), // Green
+    new BABYLON.Color3(0.33, 0.33, 0.95), // Blue
+    new BABYLON.Color3(0.95, 0.76, 0.33), // Orange
+    new BABYLON.Color3(0.76, 0.33, 0.76), // Purple
+    new BABYLON.Color3(0.33, 0.76, 0.76), // Cyan
+    new BABYLON.Color3(0.95, 0.33, 0.76), // Pink
+    new BABYLON.Color3(0.76, 0.76, 0.33), // Yellow
+    new BABYLON.Color3(0.50, 0.33, 0.95), // Indigo
+    new BABYLON.Color3(0.33, 0.95, 0.76)  // Teal
+  ];
+
+  const getRandomColor = () => {
+    // Use palette colors first
+    if (typeof getRandomColor.colorIndex === 'undefined') {
+      getRandomColor.colorIndex = 0;
     }
     
-    // Function to generate a random color
-    const getRandomColor = () => {
-      // Define a color palette with distinct, visually appealing colors
-      const colorPalette = [
-        new BABYLON.Color3(0.95, 0.33, 0.33), // Red
-        new BABYLON.Color3(0.33, 0.76, 0.33), // Green
-        new BABYLON.Color3(0.33, 0.33, 0.95), // Blue
-        new BABYLON.Color3(0.95, 0.76, 0.33), // Orange
-        new BABYLON.Color3(0.76, 0.33, 0.76), // Purple
-        new BABYLON.Color3(0.33, 0.76, 0.76), // Cyan
-        new BABYLON.Color3(0.95, 0.33, 0.76), // Pink
-        new BABYLON.Color3(0.76, 0.76, 0.33), // Yellow
-        new BABYLON.Color3(0.50, 0.33, 0.95), // Indigo
-        new BABYLON.Color3(0.33, 0.95, 0.76)  // Teal
-      ];
-      
-      // Static counter to keep track of which color to return next
-      if (typeof getRandomColor.colorIndex === 'undefined') {
-        getRandomColor.colorIndex = 0;
-      }
-      
-      // If we still have colors in the palette, return the next one
-      if (getRandomColor.colorIndex < colorPalette.length) {
-        const color = colorPalette[getRandomColor.colorIndex];
-        getRandomColor.colorIndex++;
-        return color;
-      }
-      
-      // If we've used all colors in the palette, fall back to random color generation
-      const r = Math.random();
-      const g = Math.random();
-      const b = Math.random();
-      
-      // Make sure at least one channel is very bright
-      const maxChannel = Math.max(r, g, b);
-      const brightnessFactor = 0.8 + Math.random() * 0.2; // 0.8 to 1.0
-      
-      // Scale values to ensure good saturation and differentiation
-      return new BABYLON.Color3(
-        r === maxChannel ? brightnessFactor : 0.2 + r * 0.5,
-        g === maxChannel ? brightnessFactor : 0.2 + g * 0.5,
-        b === maxChannel ? brightnessFactor : 0.2 + b * 0.5
-      );
+    if (getRandomColor.colorIndex < COLOR_PALETTE.length) {
+      const color = COLOR_PALETTE[getRandomColor.colorIndex];
+      getRandomColor.colorIndex++;
+      return color;
+    }
+    
+    // Generate random bright colors when palette is exhausted
+    const r = Math.random();
+    const g = Math.random();
+    const b = Math.random();
+    const maxChannel = Math.max(r, g, b);
+    const brightnessFactor = 0.8 + Math.random() * 0.2;
+    
+    return new BABYLON.Color3(
+      r === maxChannel ? brightnessFactor : 0.2 + r * 0.5,
+      g === maxChannel ? brightnessFactor : 0.2 + g * 0.5,
+      b === maxChannel ? brightnessFactor : 0.2 + b * 0.5
+    );
+  };
+    
+  /**
+   * Get or create a color for an object type
+   * Ensures consistent coloring across all objects of the same type
+   */
+  const getColorForType = (type) => {
+    if (!typeColors[type]) {
+      const newColor = getRandomColor();
+      setTypeColors(prev => ({ ...prev, [type]: newColor }));
+      return newColor;
+    }
+    return typeColors[type];
+  };
+    
+  /**
+   * Create 3D bounding boxes from corner coordinates
+   * Handles coordinate transformation and creates meshes for both scenes
+   */
+  const createBoxFromCorners = (name, type, corners, scene, description) => {
+    // Process corner coordinates
+    const lowerCorners = corners.slice(0, 4);
+    const upperCorners = corners.slice(4, 8);
+    
+    // Apply z-axis inversion for coordinate system alignment
+    const invertedLowerCorners = lowerCorners.map(corner => 
+      [corner[0], corner[1], -corner[2]]
+    );
+    const invertedUpperCorners = upperCorners.map(corner => 
+      [corner[0], corner[1], -corner[2]]
+    );
+    
+    // Calculate dimensions and center
+    const { width, height, depth, center } = calculateBoxGeometry(
+      invertedLowerCorners, 
+      invertedUpperCorners
+    );
+    
+    // Calculate rotation from corner vectors
+    const rotation = calculateBoxRotation(invertedLowerCorners);
+    
+    // Create material for this object type
+    const color = getColorForType(type);
+    const { material, material2 } = createBoxMaterials(type, color, scene, scene2);
+    
+    // Create primary box
+    const box = createBoxMesh(name, { width, height, depth }, center, rotation, material, scene);
+    
+    // Create secondary box for floor plan view
+    const box2 = createBoxMesh(name, { width, height, depth }, center, rotation, material2, scene2);
+    
+    // Initially hide boxes (shown only when selected/highlighted)
+    box.visibility = 0;
+    box2.visibility = 0;
+    
+    return new BBox(name, type, invertedLowerCorners, invertedUpperCorners, box, box2, [], [], description);
+  };
+
+  /**
+   * Calculate box geometry from corner coordinates
+   */
+  const calculateBoxGeometry = (lowerCorners, upperCorners) => {
+    const width = BABYLON.Vector3.Distance(
+      new BABYLON.Vector3(...lowerCorners[0]), 
+      new BABYLON.Vector3(...lowerCorners[1])
+    );
+    const depth = BABYLON.Vector3.Distance(
+      new BABYLON.Vector3(...lowerCorners[0]), 
+      new BABYLON.Vector3(...lowerCorners[2])
+    );
+    const height = BABYLON.Vector3.Distance(
+      new BABYLON.Vector3(...lowerCorners[0]), 
+      new BABYLON.Vector3(...upperCorners[0])
+    );
+    
+    // Calculate center point
+    const allCorners = [...lowerCorners, ...upperCorners];
+    const center = {
+      x: allCorners.reduce((sum, corner) => sum + corner[0], 0) / 8,
+      y: allCorners.reduce((sum, corner) => sum + corner[1], 0) / 8,
+      z: allCorners.reduce((sum, corner) => sum + corner[2], 0) / 8
     };
     
-    // Function to get or create a color for a type
-    const getColorForType = (type) => {
-      if (!typeColors[type]) {
-        // Generate a new random color for this type
-        const newColor = getRandomColor();
-        setTypeColors(prev => ({...prev, [type]: newColor}));
-        return newColor;
-      }
-      return typeColors[type];
-    };
-    
-    const createBoxFromCorners = (name, type, corners, scene, description) => {
-      // Split corners into lower and upper corners
-      const lowerCorners = corners.slice(0, 4);
-      const upperCorners = corners.slice(4, 8);
-      
-      // Apply z-axis inversion to all corners
-      const invertedLowerCorners = lowerCorners.map(corner => [corner[0], corner[1], -corner[2]]);
-      const invertedUpperCorners = upperCorners.map(corner => [corner[0], corner[1], -corner[2]]);
-      
-      // Calculate box dimensions (width, height, depth)
-      const width = BABYLON.Vector3.Distance(new BABYLON.Vector3(...invertedLowerCorners[0]), new BABYLON.Vector3(...invertedLowerCorners[1]));
-      const depth = BABYLON.Vector3.Distance(new BABYLON.Vector3(...invertedLowerCorners[0]), new BABYLON.Vector3(...invertedLowerCorners[2]));
-      const height = BABYLON.Vector3.Distance(new BABYLON.Vector3(...invertedLowerCorners[0]), new BABYLON.Vector3(...invertedUpperCorners[0]));
-    
-      // Calculate the center of the box with inverted z coordinates
-      const centerX = (invertedLowerCorners[0][0] + invertedLowerCorners[1][0] + invertedLowerCorners[2][0] + invertedLowerCorners[3][0] + 
-                       invertedUpperCorners[0][0] + invertedUpperCorners[1][0] + invertedUpperCorners[2][0] + invertedUpperCorners[3][0]) / 8;
-      const centerY = (invertedLowerCorners[0][1] + invertedLowerCorners[1][1] + invertedLowerCorners[2][1] + invertedLowerCorners[3][1] + 
-                       invertedUpperCorners[0][1] + invertedUpperCorners[1][1] + invertedUpperCorners[2][1] + invertedUpperCorners[3][1]) / 8;
-      const centerZ = (invertedLowerCorners[0][2] + invertedLowerCorners[1][2] + invertedLowerCorners[2][2] + invertedLowerCorners[3][2] + 
-                       invertedUpperCorners[0][2] + invertedUpperCorners[1][2] + invertedUpperCorners[2][2] + invertedUpperCorners[3][2]) / 8;
-      
-      // Create the box in Babylon.js
-      const box = BABYLON.MeshBuilder.CreateBox(name, {
-        width: width,
-        height: height,
-        depth: depth,
-        updatable: true
-      }, scene);
-    
-      // Position the box at the center
-      box.position = new BABYLON.Vector3(centerX, centerY, centerZ);
-    
-      // Calculate rotation: Compute local axes with inverted z coordinates
-      const lowerVec1 = BABYLON.Vector3.FromArray(invertedLowerCorners[0]);
-      const lowerVec2 = BABYLON.Vector3.FromArray(invertedLowerCorners[1]);
-      const lowerVec3 = BABYLON.Vector3.FromArray(invertedLowerCorners[3]);
-    
-      const localX = lowerVec2.subtract(lowerVec1).normalize(); // Right direction
-      const localZ = lowerVec3.subtract(lowerVec1).normalize(); // Forward direction
-      const localY = BABYLON.Vector3.Cross(localZ, localX).normalize(); // Up direction (perpendicular to local X and Z)
-    
-      // Construct a rotation matrix manually from the local axes vectors
-      const rotationMatrix = BABYLON.Matrix.FromValues(
-        localX.x, localX.y, localX.z, 0,
-        localY.x, localY.y, localY.z, 0,
-        localZ.x, localZ.y, localZ.z, 0,
-        0, 0, 0, 1
-      );
-    
-      // Convert the rotation matrix to a quaternion
-      const rotationQuaternion = new BABYLON.Quaternion();
-      rotationMatrix.decompose(undefined, rotationQuaternion);
-    
-      // Apply the rotation quaternion to the box
-      box.rotationQuaternion = rotationQuaternion;
-    
-      // Get or create color for this type
-      const color = getColorForType(type);
-      
-      // Add material based on the type
-      let material = scene.getMaterialByName(type);
-      if (!material) {
-        material = new BABYLON.StandardMaterial(type, scene);
-        material.diffuseColor = color;
-        material.alpha = 0.3; // Set transparency level (0 is fully transparent, 1 is fully opaque)
-      }
-      box.material = material;
-      // Enable edges rendering
-      box.enableEdgesRendering();
-      box.edgesWidth = 8.0;
-      box.edgesColor = new BABYLON.Color4(
-        material.diffuseColor.r,
-        material.diffuseColor.g,
-        material.diffuseColor.b,
-        1
-      );
+    return { width, height, depth, center };
+  };
 
-      // Create second box for the secondary scene
-      const box2 = BABYLON.MeshBuilder.CreateBox(name, {
-        width: width,
-        height: height,
-        depth: depth,
-        updatable: true
-      }, scene2);
-      
-      let material2 = scene2.getMaterialByName(type);
-      if (!material2) {
-        material2 = new BABYLON.StandardMaterial(type, scene2);
-        material2.diffuseColor = color;
-        material2.alpha = 0.3; // Set transparency level (0 is fully transparent, 1 is fully opaque)
-      }
-      
-      // Position the box at the center
-      box2.position = new BABYLON.Vector3(centerX, centerY, centerZ);
+  /**
+   * Calculate box rotation from corner vectors
+   */
+  const calculateBoxRotation = (lowerCorners) => {
+    const lowerVec1 = BABYLON.Vector3.FromArray(lowerCorners[0]);
+    const lowerVec2 = BABYLON.Vector3.FromArray(lowerCorners[1]);
+    const lowerVec3 = BABYLON.Vector3.FromArray(lowerCorners[3]);
+    
+    const localX = lowerVec2.subtract(lowerVec1).normalize();
+    const localZ = lowerVec3.subtract(lowerVec1).normalize();
+    const localY = BABYLON.Vector3.Cross(localZ, localX).normalize();
+    
+    const rotationMatrix = BABYLON.Matrix.FromValues(
+      localX.x, localX.y, localX.z, 0,
+      localY.x, localY.y, localY.z, 0,
+      localZ.x, localZ.y, localZ.z, 0,
+      0, 0, 0, 1
+    );
+    
+    const rotationQuaternion = new BABYLON.Quaternion();
+    rotationMatrix.decompose(undefined, rotationQuaternion);
+    
+    return rotationQuaternion;
+  };
 
-      // Apply the rotation quaternion to the box
-      box2.rotationQuaternion = rotationQuaternion;
-      box2.material = material2;
-      
-      // Enable edges rendering
-      box2.enableEdgesRendering();
-      box2.edgesWidth = 8.0;
-      box2.edgesColor = new BABYLON.Color4(
-        material2.diffuseColor.r,
-        material2.diffuseColor.g,
-        material2.diffuseColor.b,
-        1
-      );
+  /**
+   * Create materials for both scenes
+   */
+  const createBoxMaterials = (type, color, scene, scene2) => {
+    let material = scene.getMaterialByName(type);
+    if (!material) {
+      material = new BABYLON.StandardMaterial(type, scene);
+      material.diffuseColor = color;
+      material.alpha = 0.3;
+    }
+    
+    let material2 = scene2.getMaterialByName(type);
+    if (!material2) {
+      material2 = new BABYLON.StandardMaterial(type, scene2);
+      material2.diffuseColor = color;
+      material2.alpha = 0.3;
+    }
+    
+    return { material, material2 };
+  };
 
-      // Initially hide the boxes - only show when highlighted or selected
-      box.visibility = 0;
-      box2.visibility = 0;
-
-      // Create and return a BBox object instead of just the Babylon box
-      return new BBox(name, type, invertedLowerCorners, invertedUpperCorners, box, box2, [], [], description);
-    };
+  /**
+   * Create a box mesh with edges and styling
+   */
+  const createBoxMesh = (name, dimensions, center, rotation, material, scene) => {
+    const box = BABYLON.MeshBuilder.CreateBox(name, {
+      width: dimensions.width,
+      height: dimensions.height,
+      depth: dimensions.depth,
+      updatable: true
+    }, scene);
+    
+    box.position = new BABYLON.Vector3(center.x, center.y, center.z);
+    box.rotationQuaternion = rotation;
+    box.material = material;
+    
+    // Enable edges rendering with color matching
+    box.enableEdgesRendering();
+    box.edgesWidth = 8.0;
+    box.edgesColor = new BABYLON.Color4(
+      material.diffuseColor.r,
+      material.diffuseColor.g,
+      material.diffuseColor.b,
+      1
+    );
+    
+    return box;
+  };
     
     const loadJson = (json) => {
       console.log(json);
@@ -509,6 +556,7 @@ const BabylonScene = forwardRef((props, ref) => {
       // Create a basic scene with a camera and light
       const createScene = () => {
         const scene = new BABYLON.Scene(engine);
+        //scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
         // Create ArcRotateCamera (user can rotate with mouse)
         const camera = new BABYLON.ArcRotateCamera(
           "camera1",
@@ -611,6 +659,47 @@ const BabylonScene = forwardRef((props, ref) => {
             secondaryCamera.orthoBottom *= (1 - zoomFactor);
           }
         });
+
+        // Add double-click event to center camera on clicked point
+        secondaryCanvas.addEventListener("dblclick", (event) => {
+          // Get the pick info from the scene
+          const pickResult = scene2.pick(event.offsetX, event.offsetY);
+          
+          if (pickResult.hit) {
+            // Get the hit position in world coordinates
+            const hitPoint = pickResult.pickedPoint;
+            
+            // Create animation to smoothly move camera target to the hit point
+            BABYLON.Animation.CreateAndStartAnimation(
+              "cameraTargetAnimation",
+              secondaryCamera,
+              "target",
+              30, // frames per second
+              30, // number of frames
+              secondaryCamera.target,
+              hitPoint,
+              BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+            );
+            
+            // Adjust camera position to maintain the same view distance
+            const direction = secondaryCamera.position.subtract(secondaryCamera.target).normalize();
+            const distance = secondaryCamera.position.subtract(secondaryCamera.target).length();
+            const newPosition = hitPoint.add(direction.scale(distance));
+            
+            // Animate camera position
+            BABYLON.Animation.CreateAndStartAnimation(
+              "cameraPositionAnimation",
+              secondaryCamera,
+              "position",
+              30, // frames per second
+              30, // number of frames
+              secondaryCamera.position,
+              newPosition,
+              BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+            );
+          }
+        });
+        
         //scene.createDefaultEnvironment();
         //engine.registerView(canvas,camera);
         //engine.registerView(secondaryCanvas, secondaryCamera);
