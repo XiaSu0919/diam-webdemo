@@ -1,34 +1,34 @@
-# DIAM Web Demo
+# FlyMeThrough
 
-A 3D Indoor Asset Management (DIAM) web application for visualizing and exploring indoor spaces with AI-detected object annotations.
+A 3D indoor space exploration web application for visualizing and navigating indoor environments with AI-detected object annotations.
 
 ## Overview
 
-This React-based application provides an interactive 3D visualization platform for indoor environments, featuring:
+This React-based application provides an immersive 3D exploration platform that lets you "fly through" indoor environments, featuring:
 
 - **Dual-View Interface**: Primary 3D perspective view and secondary orthographic floor plan view
 - **AI Object Detection**: Visualize detected objects with colored bounding boxes and descriptions
 - **Interactive Navigation**: Click, hover, and keyboard-controlled camera movement
 - **Space Management**: Browse, download, and select different indoor spaces
-- **Real-time Asset Exploration**: Explore facilities and objects within each space
+- **Real-time Object Exploration**: Explore and interact with detected objects within each space
 
 ## Features
 
-### 🏢 Space Management
-- Browse available indoor spaces with preview images
-- Download 3D models (.ply files) on-demand
+### 🏢 Space Exploration
+- Browse available indoor environments with preview images  
+- Download 3D models (.ply files) for immersive exploration
 - Visual download progress indicators
-- Automatic model loading and object detection overlay
+- Seamless model loading with interactive object detection
 
-### 🎮 3D Visualization
-- **Main View**: Full 3D perspective with mouse/keyboard controls
-- **Floor Plan View**: Top-down orthographic view for spatial understanding
-- **Dual-camera synchronization** for coordinated navigation
+### 🎮 3D Navigation
+- **Main View**: Full 3D perspective with intuitive mouse/keyboard flight controls
+- **Floor Plan View**: Top-down orthographic view for spatial orientation
+- **Dual-view synchronization** for seamless navigation experience
 
 ### 🔍 Object Detection & Interaction
 - Color-coded bounding boxes for different object types
 - Interactive object selection and highlighting
-- Facility panel with object descriptions
+- Object panel with detailed descriptions
 - Camera focus on selected objects
 - Hover effects and visual feedback
 
@@ -50,7 +50,7 @@ This React-based application provides an interactive 3D visualization platform f
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd diam-webdemo
+   cd flymethrough
    ```
 
 2. **Install dependencies**
@@ -80,7 +80,7 @@ This React-based application provides an interactive 3D visualization platform f
 1. **Browse Spaces**: Available spaces appear in the left panel with preview images
 2. **Download Models**: Click on a space to download its 3D model (indicated by download icon)
 3. **Explore Space**: Once downloaded (green checkmark), click to load the space
-4. **Navigate**: Use mouse to rotate/zoom, arrow keys to move camera
+4. **Fly Through**: Use mouse to look around, arrow keys to fly through the space
 
 ### Navigation Controls
 
@@ -98,7 +98,7 @@ This React-based application provides an interactive 3D visualization platform f
 
 ### Object Interaction
 
-- **Hover**: Objects highlight with thicker edges and appear in facility panel
+- **Hover**: Objects highlight with thicker edges and appear in object panel
 - **Click**: Select objects for persistent highlighting
 - **View Button**: Focus camera on selected object
 - **Return to Bird's Eye**: Reset to overview perspective
@@ -210,7 +210,7 @@ Enable console logging by checking browser developer tools. Key log messages inc
 
 ## License
 
-This project is part of the DIAM (3D Indoor Asset Management) research initiative.
+This project is FlyMeThrough - an innovative 3D indoor space visualization platform.
 
 ## Troubleshooting
 
@@ -222,8 +222,8 @@ This project is part of the DIAM (3D Indoor Asset Management) research initiativ
 
 ### Support
 
-For technical issues or questions about the DIAM platform, please check the project documentation or create an issue in the repository.
+For technical issues or questions about the FlyMeThrough platform, please check the project documentation or create an issue in the repository.
 
 ---
 
-*Built with React and Babylon.js for advanced 3D indoor space visualization and management.*
+*Built with React and Babylon.js for immersive 3D indoor space exploration and navigation.*

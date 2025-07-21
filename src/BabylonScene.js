@@ -9,7 +9,7 @@ import "@babylonjs/loaders/OBJ/objFileLoader";
  * - Primary 3D perspective view for model exploration
  * - Secondary orthographic top-down view for floor plan navigation
  * - Interactive bounding box visualization for detected objects
- * - Facility panel with object selection and description
+ * - Object panel with item selection and description
  */
 const BabylonScene = forwardRef((props, ref) => {
   // Canvas references
@@ -30,8 +30,8 @@ const BabylonScene = forwardRef((props, ref) => {
   const [selectedBox, setSelectedBox] = useState(null);
   
   // UI references
-  const facilityItemsRef = useRef({});
-  const facilityListRef = useRef(null);
+  const objectItemsRef = useRef({});
+  const objectListRef = useRef(null);
     
   /**
    * BBox Class - Represents a bounding box for detected objects
@@ -331,8 +331,8 @@ const BabylonScene = forwardRef((props, ref) => {
         setHoveredBox(box);
         
         // Scroll to the item if needed
-        if (facilityItemsRef.current[box.name] && facilityListRef.current) {
-          facilityItemsRef.current[box.name].scrollIntoView({ 
+        if (objectItemsRef.current[box.name] && objectListRef.current) {
+          objectItemsRef.current[box.name].scrollIntoView({ 
             behavior: 'smooth', 
             block: 'nearest' 
           });
@@ -799,9 +799,9 @@ const BabylonScene = forwardRef((props, ref) => {
       height: "100vh", // Full height of the viewport
     }}
   >
-    <h3>Detected Facilities</h3>
+    <h3>Detected Objects</h3>
     <div
-      ref={facilityListRef}
+      ref={objectListRef}
       style={{
         flexGrow: 1,
         overflowY: "auto", // Allow scrolling when there are too many items
@@ -811,11 +811,11 @@ const BabylonScene = forwardRef((props, ref) => {
       {bboxes.map((bbox, index) => (
         <div
           key={index}
-          ref={el => facilityItemsRef.current[bbox.name] = el}
+          ref={el => objectItemsRef.current[bbox.name] = el}
           onClick={() => selectBox(bbox)}
           onMouseEnter={() => highlightBox(bbox)}
           onMouseLeave={() => hoveredBox === bbox && setHoveredBox(null)}
-          className="facility-item hover:bg-gray-200 rounded-md shadow-sm"
+          className="object-item hover:bg-gray-200 rounded-md shadow-sm"
           style={{ 
             marginBottom: "12px",
             padding: "10px",

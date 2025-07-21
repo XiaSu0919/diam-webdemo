@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "FlyMeThrough",
+  "name": "FlyMeThrough - 3D Indoor Space Explorer",
   "icons": [
     {
       "src": "favicon.ico",
