@@ -1,4 +1,4 @@
-# FlyMeThrough
+# FlyMeThrough Model Viewer
 
 A 3D indoor space exploration web application for visualizing and navigating indoor environments with AI-detected object annotations.
 
